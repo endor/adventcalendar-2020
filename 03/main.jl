@@ -33,6 +33,6 @@ println("Trees: ", trees_in_slope(3, 1))
 
 # Part 2
 slopes = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
-result = reduce(*, map(s -> trees_in_slope(s[1], s[2]), slopes))
+result = prod(s -> trees_in_slope(s[1], s[2]), slopes)
 
 println("Result: ", result)
