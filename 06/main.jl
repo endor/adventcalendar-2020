@@ -20,10 +20,7 @@ for line in eachline("input.txt")
         update_total()
     else
         global people_in_group += 1
-
-        for question in split(line, "")
-            push!(questions, question)
-        end
+        push!(questions, collect(line)...)
     end
 end
 
