@@ -21,84 +21,28 @@ function space_from_input(fourth_dimension)
         y += 1
     end
 
-    center, space
+    space
 end
 
-function three_dimensional_neighbours()
-    map(index -> CartesianIndex(index...), [
-        [ 0,  0,  1], [ 0,  0, -1], [ 1,  0,  1], [ 1,  0,  0],
-        [ 1,  0, -1], [-1,  0, -1], [-1,  0,  0], [-1,  0,  1],
-        [ 0,  1,  1], [ 0,  1,  0], [ 0,  1, -1], [ 1,  1,  1],
-        [ 1,  1,  0], [ 1,  1, -1], [-1,  1, -1], [-1,  1,  0],
-        [-1,  1,  1], [ 0, -1,  1], [ 0, -1,  0], [ 0, -1, -1],
-        [ 1, -1,  1], [ 1, -1,  0], [ 1, -1, -1], [-1, -1, -1],
-        [-1, -1,  0], [-1, -1,  1],
-    ])
+function should_be_active(space, pos, dimensions)
+    neighbours = filter(!iszero, CartesianIndices(ntuple(_ -> -1:1, dimensions)))
+
+    c = count(==(1), map(
+        n -> checkbounds(Bool, space, n + pos) ? space[n + pos] : nothing,
+        neighbours
+    ))
+    (space[pos] == 1 && (c == 2 || c == 3)) || (c == 3)
 end
 
-function four_dimensional_neighbours()
-    map(index -> CartesianIndex(index...), [
-        [ 0,  0,  0, -1], [ 0,  0,  1, -1], [ 0,  0, -1, -1],
-        [ 1,  0,  1, -1], [ 1,  0,  0, -1], [ 1,  0, -1, -1],
-        [-1,  0, -1, -1], [-1,  0,  0, -1], [-1,  0,  1, -1],
-        [ 0,  1,  1, -1], [ 0,  1,  0, -1], [ 0,  1, -1, -1],
-        [ 1,  1,  1, -1], [ 1,  1,  0, -1], [ 1,  1, -1, -1],
-        [-1,  1, -1, -1], [-1,  1,  0, -1], [-1,  1,  1, -1],
-        [ 0, -1,  1, -1], [ 0, -1,  0, -1], [ 0, -1, -1, -1],
-        [ 1, -1,  1, -1], [ 1, -1,  0, -1], [ 1, -1, -1, -1],
-        [-1, -1, -1, -1], [-1, -1,  0, -1], [-1, -1,  1, -1],
-
-        [ 0,  0,  1,  0], [ 0,  0, -1,  0], [ 1,  0,  1,  0],
-        [ 1,  0,  0,  0], [ 1,  0, -1,  0], [-1,  0, -1,  0],
-        [-1,  0,  0,  0], [-1,  0,  1,  0], [ 0,  1,  1,  0],
-        [ 0,  1,  0,  0], [ 0,  1, -1,  0], [ 1,  1,  1,  0],
-        [ 1,  1,  0,  0], [ 1,  1, -1,  0], [-1,  1, -1,  0],
-        [-1,  1,  0,  0], [-1,  1,  1,  0], [ 0, -1,  1,  0],
-        [ 0, -1,  0,  0], [ 0, -1, -1,  0], [ 1, -1,  1,  0],
-        [ 1, -1,  0,  0], [ 1, -1, -1,  0], [-1, -1, -1,  0],
-        [-1, -1,  0,  0], [-1, -1,  1,  0],
-
-        [ 0,  0,  0,  1], [ 0,  0,  1,  1], [ 0,  0, -1,  1],
-        [ 1,  0,  1,  1], [ 1,  0,  0,  1], [ 1,  0, -1,  1],
-        [-1,  0, -1,  1], [-1,  0,  0,  1], [-1,  0,  1,  1],
-        [ 0,  1,  1,  1], [ 0,  1,  0,  1], [ 0,  1, -1,  1],
-        [ 1,  1,  1,  1], [ 1,  1,  0,  1], [ 1,  1, -1,  1],
-        [-1,  1, -1,  1], [-1,  1,  0,  1], [-1,  1,  1,  1],
-        [ 0, -1,  1,  1], [ 0, -1,  0,  1], [ 0, -1, -1,  1],
-        [ 1, -1,  1,  1], [ 1, -1,  0,  1], [ 1, -1, -1,  1],
-        [-1, -1, -1,  1], [-1, -1,  0,  1], [-1, -1,  1,  1],
-    ])
-end
-
-function should_be_active(space, y, x, z, a)
-    position = isnothing(a) ?
-        CartesianIndex(y, x, z) :
-        CartesianIndex(y, x, z, a)
-
-    neighbours = isnothing(a) ?
-        three_dimensional_neighbours() :
-        four_dimensional_neighbours()
-
-    c = count(==(1), map(n -> space[n + position], neighbours))
-    (space[position] == 1 && (c == 2 || c == 3)) || (c == 3)
-end
-
-function part1(center, space)
-    size = center * 2
-
-
+function solve(space, dimensions)
     for _ in 1:6
         new_space = copy(space)
 
-        for z in 2:(size - 1)
-            for y in 2:(size - 1)
-                for x in 2:(size - 1)
-                    if should_be_active(space, y, x, z, nothing)
-                        new_space[y, x, z] = 1
-                    else
-                        new_space[y, x, z] = 0
-                    end
-                end
+        for index in CartesianIndices(space)
+            if should_be_active(space, index, dimensions)
+                new_space[index] = 1
+            else
+                new_space[index] = 0
             end
         end
 
@@ -108,31 +52,8 @@ function part1(center, space)
     count(==(1), space)
 end
 
-function part2(center, space)
-    size = center * 2
+# Part 1
+println(solve(space_from_input(false), 3))
 
-    for _ in 1:6
-        new_space = copy(space)
-
-        for a in 2:(size - 1)
-            for z in 2:(size - 1)
-                for y in 2:(size - 1)
-                    for x in 2:(size - 1)
-                        if should_be_active(space, y, x, z, a)
-                            new_space[y, x, z, a] = 1
-                        else
-                            new_space[y, x, z, a] = 0
-                        end
-                    end
-                end
-            end
-        end
-
-        space = new_space
-    end
-
-    count(==(1), space)
-end
-
-println(part1(space_from_input(false)...))
-println(part2(space_from_input(true)...))
+# Part 2
+println(solve(space_from_input(true), 4))
